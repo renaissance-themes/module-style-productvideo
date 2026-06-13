@@ -1,0 +1,127 @@
+/* Vanilla/blank: Magento_ProductVideo module CSS (PDP gallery video support).
+   Ported from blank's Magento_ProductVideo/web/css/source/_module.less.
+   Collected into the bundle by Vanilla_ThemeBuild's @vanilla-modules directive.
+
+   Styles the fotorama gallery when a product has video: the play badge overlay
+   on the main stage frame (.fotorama-video-container:after), the camcorder badge
+   on the thumbnail rail (.video-thumb-icon:after), and the embedded player iframe
+   box (.product-video). The fotorama frame/thumb geometry itself is mage/gallery's
+   CSS; this file only adds the video overlays on top of it.
+
+   SPRITE REPLACED BY INLINE SVG: blank paints both badges from one raster sprite,
+   url('../Magento_ProductVideo/img/gallery-sprite.png') with bottom-right (play
+   badge, 100x100) and bottom-left (camcorder, 49x40) alignment. Our bundle resolves
+   url() relative to the theme's css/ directory, so that module-relative path would
+   not survive collection. Instead each badge is an inline data-URI SVG redrawn
+   from the sprite's measured geometry (PIL alpha/luma scan of gallery-sprite.png):
+   play badge = white ring r45/stroke 4 + right-pointing triangle (38,32)-(38,68)-
+   (72,50) at ~.8 alpha; camcorder = #333 40%-alpha fill with 2px white 80%-alpha
+   outline, rounded body + left-pointing lens triangle. Drawn at the sprite cell
+   size and painted center / contain, so the boxes and hover scale match blank. */
+@layer modules {
+
+  /* The main stage frame that holds a video: the play badge overlay.
+     Box and offsets are blank's exactly (100x100, centered, nudged 12px down). */
+  .fotorama-video-container {
+    &::after {
+      /* blank: gallery-sprite.png bottom right (the 100x100 play-badge cell) */
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='none' stroke='%23fff' stroke-opacity='.8' stroke-width='4'/%3E%3Cpath d='M38 32v36l34-18z' fill='%23fff' fill-opacity='.84'/%3E%3C/svg%3E") center / contain no-repeat;
+      inset-block-end: 0;
+      content: '';
+      height: 100px;
+      inset-inline-start: 0;
+      margin: auto;
+      position: absolute;
+      inset-inline-end: 0;
+      inset-block-start: 12px;
+      width: 100px;
+    }
+
+    /* No magnifier lens over a video frame. !important matches blank (it has to
+       beat the magnifier's inline/JS styling). */
+    & .magnify-lens {
+      display: none !important;
+    }
+
+    /* Not-yet-played video: dim the poster image and grow the play badge. */
+    &.video-unplayed:hover {
+      & img {
+        opacity: 0.6;
+      }
+
+      &::after {
+        transform: scale(1.25);
+      }
+    }
+  }
+
+  /* Thumbnail-rail entries that are videos: the small camcorder badge. */
+  .video-thumb-icon::after {
+    /* blank: gallery-sprite.png bottom left (the 49x40 camcorder cell) */
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 49 40'%3E%3Cg fill='%23333' fill-opacity='.4' stroke='%23fff' stroke-opacity='.8' stroke-width='2'%3E%3Crect x='4' y='2' width='31' height='25' rx='5'/%3E%3Cpath d='M46 4.5v20L34 14.5z'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+    inset-block-end: 0;
+    content: '';
+    height: 40px;
+    inset-inline-start: 0;
+    margin: auto;
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: 10px;
+    width: 49px;
+  }
+
+  /* The embedded player box inside the stage frame: 75% of the frame height,
+     vertically centered; the iframe fills it. JS swaps this in when the video
+     starts. z-index 9999 is blank's (above fotorama's own stage chrome). */
+  .product-video {
+    inset-block-end: 0;
+    height: 75%;
+    inset-inline-start: 0;
+    margin: auto;
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: 0;
+    width: 100%;
+
+    & iframe {
+      height: 100%;
+      inset-inline-start: 0;
+      position: absolute;
+      inset-block-start: 0;
+      width: 100%;
+      z-index: 9999;
+    }
+  }
+
+  /* Keyboard focus on the stage shaft: blank reserves the same centered 100x100
+     box on the active frame (an empty overlay box, no background; the visible
+     badge stays .fotorama-video-container's own ::after). Ported as-is. */
+  .fotorama__stage__shaft:focus .fotorama__stage__frame.fotorama__active::after {
+    inset-block-end: 0;
+    content: '';
+    height: 100px;
+    inset-inline-start: 0;
+    margin: auto;
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: 12px;
+    width: 100px;
+  }
+
+  /* While the player is loading, hide the play badge. */
+  .fotorama__product-video--loading::after {
+    visibility: hidden;
+  }
+
+  /* Phones held in landscape: let the player use the full frame height.
+     blank gates this with a deprecated device-width query (min-device-width
+     320px / max-device-width 780px, landscape); ported as the theme's mobile
+     range (below --screen-m, 48em ~ 768px vs blank's 780px device-width) plus
+     the same orientation condition. */
+  @media (--screen-m-max) and (orientation: landscape) {
+    .product-video {
+      height: 100%;
+      width: 81%;
+    }
+  }
+}
